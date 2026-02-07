@@ -1,5 +1,7 @@
 # CC Viewer
 
+![CC Viewer](docs/assets/screenshot.png)
+
 **Claude Code** と **Codex** の会話ログを閲覧・検索できる統合ログビューアーです。
 
 ローカルに保存されたセッションファイル（`~/.claude/projects/`、`~/.codex/sessions/`）を読み取り、プロジェクト単位・セッション単位で会話の内容を確認できます。
