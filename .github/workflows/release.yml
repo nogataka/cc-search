@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Tag name (e.g., v0.0.1)"
+        required: true
+      release_name:
+        description: "Release title (defaults to tag name)"
+        required: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.12.0
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm run build
+
+      - name: Verify tag and package version match
+        id: ver
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          case "${{ github.event_name }}" in
+            workflow_dispatch) TAG="${{ github.event.inputs.tag_name }}";;
+            *) TAG="${{ github.ref_name }}";;
+          esac
+          if [ "v${PKG_VERSION}" != "$TAG" ]; then
+            echo "Tag (${TAG}) and package.json version (v${PKG_VERSION}) mismatch" >&2
+            exit 1
+          fi
+          echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if version already published
+        id: already
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          if npm view "$NAME@${{ steps.ver.outputs.version }}" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "$NAME@${{ steps.ver.outputs.version }} is already published. Skipping."
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm
+        if: steps.already.outputs.published == 'false'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
+      - name: Determine release metadata
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag_name }}" >> "$GITHUB_OUTPUT"
+            if [ -n "${{ github.event.inputs.release_name }}" ]; then
+              echo "name=${{ github.event.inputs.release_name }}" >> "$GITHUB_OUTPUT"
+            else
+              echo "name=${{ github.event.inputs.tag_name }}" >> "$GITHUB_OUTPUT"
+            fi
+            echo "target=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "target=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          release_name: ${{ steps.meta.outputs.name }}
+          target_commitish: ${{ steps.meta.outputs.target }}
+          body: "Automated release for ${{ steps.meta.outputs.tag }}"

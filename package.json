@@ -1,9 +1,17 @@
 {
-  "name": "cc-viewer",
+  "name": "@nogataka/cc-viewer",
   "version": "0.0.1",
-  "private": true,
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nogataka/cc-viewer.git"
+  },
+  "homepage": "https://github.com/nogataka/cc-viewer",
+  "files": [
+    "src",
+    ".next"
+  ],
   "engines": {
     "node": ">=20.12.0"
   },
