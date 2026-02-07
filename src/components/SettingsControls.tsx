@@ -1,0 +1,87 @@
+"use client";
+
+import { useQueryClient } from "@tanstack/react-query";
+import { type FC, useCallback, useId } from "react";
+import { configQueryConfig, useConfig } from "@/app/hooks/useConfig";
+import { Checkbox } from "@/components/ui/checkbox";
+
+interface SettingsControlsProps {
+  invalidateQueryKey?: readonly unknown[];
+}
+
+export const SettingsControls: FC<SettingsControlsProps> = ({
+  invalidateQueryKey,
+}) => {
+  const checkboxId = useId();
+  const { config, updateConfig } = useConfig();
+  const queryClient = useQueryClient();
+
+  const onConfigChanged = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: configQueryConfig.queryKey,
+    });
+    if (invalidateQueryKey) {
+      await queryClient.invalidateQueries({
+        queryKey: invalidateQueryKey,
+      });
+    }
+  }, [queryClient, invalidateQueryKey]);
+
+  const handleHideNoUserMessageChange = async () => {
+    if (!config) return;
+    const newConfig = {
+      ...config,
+      hideNoUserMessageSession: !config.hideNoUserMessageSession,
+    };
+    updateConfig(newConfig);
+    await onConfigChanged();
+  };
+
+  const handleUnifySameTitleChange = async () => {
+    if (!config) return;
+    const newConfig = {
+      ...config,
+      unifySameTitleSession: !config.unifySameTitleSession,
+    };
+    updateConfig(newConfig);
+    await onConfigChanged();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id={checkboxId}
+          checked={config?.hideNoUserMessageSession}
+          onCheckedChange={handleHideNoUserMessageChange}
+        />
+        <label
+          htmlFor={checkboxId}
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Hide sessions without user messages
+        </label>
+      </div>
+      <p className="text-xs text-muted-foreground mt-1 ml-6">
+        Only show sessions that contain user commands or messages
+      </p>
+
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id={`${checkboxId}-unify`}
+          checked={config?.unifySameTitleSession}
+          onCheckedChange={handleUnifySameTitleChange}
+        />
+        <label
+          htmlFor={`${checkboxId}-unify`}
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Unify sessions with same title
+        </label>
+      </div>
+      <p className="text-xs text-muted-foreground mt-1 ml-6">
+        Show only the latest session when multiple sessions have the same title
+      </p>
+    </div>
+  );
+};
