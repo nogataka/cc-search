@@ -49,8 +49,20 @@ if [ -d "$PNPM_STORE" ]; then
       fi
     fi
   done
+  # Remove .pnpm virtual store (no longer needed after hoisting)
+  rm -rf "$PNPM_STORE"
   echo "Hoisted pnpm nested packages to top-level node_modules"
 fi
+
+# Remove unnecessary files to reduce package size
+# - @img/sharp-libvips-* native binaries (~15MB each, not needed for the server)
+rm -rf "$STANDALONE_NM/@img/sharp-libvips-"* 2>/dev/null || true
+# - caniuse-lite data (~2.4MB, only needed at build time)
+rm -rf "$STANDALONE_NM/caniuse-lite" 2>/dev/null || true
+# - next/dist/compiled/webpack (not needed at runtime for standalone)
+rm -rf "$STANDALONE_NM/next/dist/compiled/webpack" 2>/dev/null || true
+
+echo "Package size: $(du -sh ./dist | cut -f1)"
 
 # Copy CLI entry point into dist/
 cp bin/index.js ./dist/index.js
