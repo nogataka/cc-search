@@ -1,4 +1,5 @@
-import { HistoryIcon } from "lucide-react";
+import { ArrowLeft, HistoryIcon } from "lucide-react";
+import Link from "next/link";
 import {
   ClaudeCodeProjectList,
   CodexProjectList,
@@ -12,6 +13,13 @@ export default function ProjectsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="mb-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Link>
         <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
           <HistoryIcon className="w-8 h-8" />
           CC Viewer

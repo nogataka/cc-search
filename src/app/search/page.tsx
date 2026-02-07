@@ -3,12 +3,14 @@
 import {
   ArrowLeft,
   Bot,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   Search as SearchIcon,
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import {
@@ -34,6 +36,8 @@ type SearchResult = {
   role: "user" | "assistant";
 };
 
+const PER_PAGE = 20;
+
 const formatDate = (dateString: string | null) => {
   if (!dateString) return "";
   return new Date(dateString).toLocaleString("ja-JP", {
@@ -53,43 +57,59 @@ export default function SearchPage() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [total, setTotal] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
+  const [page, setPage] = useState(0);
+
+  const totalPages = Math.ceil(total / PER_PAGE);
+
+  const fetchResults = useCallback(
+    async (searchQuery: string, offset: number) => {
+      const sources: ("codex" | "claude-code")[] = [];
+      if (searchCodex) sources.push("codex");
+      if (searchClaudeCode) sources.push("claude-code");
+
+      if (sources.length === 0) {
+        setResults([]);
+        setTotal(0);
+        setHasSearched(true);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const res = await honoClient.api.search.$post({
+          json: {
+            query: searchQuery,
+            sources,
+            limit: PER_PAGE,
+            offset,
+          },
+        });
+        const data = await res.json();
+        setResults(data.results as SearchResult[]);
+        setTotal(data.total);
+      } catch (error) {
+        console.error("Search failed:", error);
+        setResults([]);
+        setTotal(0);
+      } finally {
+        setIsSearching(false);
+        setHasSearched(true);
+      }
+    },
+    [searchCodex, searchClaudeCode],
+  );
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
+    setPage(0);
+    await fetchResults(query.trim(), 0);
+  };
 
-    const sources: ("codex" | "claude-code")[] = [];
-    if (searchCodex) sources.push("codex");
-    if (searchClaudeCode) sources.push("claude-code");
-
-    if (sources.length === 0) {
-      setResults([]);
-      setTotal(0);
-      setHasSearched(true);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const res = await honoClient.api.search.$post({
-        json: {
-          query: query.trim(),
-          sources,
-          limit: 50,
-          offset: 0,
-        },
-      });
-      const data = await res.json();
-      setResults(data.results as SearchResult[]);
-      setTotal(data.total);
-    } catch (error) {
-      console.error("Search failed:", error);
-      setResults([]);
-      setTotal(0);
-    } finally {
-      setIsSearching(false);
-      setHasSearched(true);
-    }
+  const handlePageChange = async (newPage: number) => {
+    setPage(newPage);
+    await fetchResults(query.trim(), newPage * PER_PAGE);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -177,12 +197,13 @@ export default function SearchPage() {
           results.length > 0 ? (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Found {total} results
+                Found {total} results (page {page + 1} / {totalPages})
               </p>
               {results.map((result, index) => (
                 <Link
                   key={`${result.sessionId}-${index}`}
                   href={`/projects/${result.source}/${result.projectId}/sessions/${result.sessionId}`}
+                  className="block"
                 >
                   <Card className="hover:border-primary transition-colors cursor-pointer">
                     <CardHeader className="py-3">
@@ -226,6 +247,32 @@ export default function SearchPage() {
                   </Card>
                 </Link>
               ))}
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 0}
+                    onClick={() => handlePageChange(page - 1)}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Prev
+                  </Button>
+                  <span className="text-sm text-muted-foreground px-3">
+                    {page + 1} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages - 1}
+                    onClick={() => handlePageChange(page + 1)}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
