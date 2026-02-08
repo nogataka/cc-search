@@ -26,6 +26,36 @@ const formatTimestamp = (timestamp: string | null) => {
   }
 };
 
+const isToolResultOnly = (content: unknown): boolean => {
+  if (!Array.isArray(content)) return false;
+  return content.every(
+    (item) =>
+      typeof item === "object" &&
+      item !== null &&
+      "type" in item &&
+      item.type === "tool_result",
+  );
+};
+
+const extractToolResultText = (content: unknown): string => {
+  if (!Array.isArray(content)) return "";
+  return content
+    .filter(
+      (item) =>
+        typeof item === "object" &&
+        item !== null &&
+        "type" in item &&
+        item.type === "tool_result",
+    )
+    .map((item) => {
+      const toolContent = (item as { content?: unknown }).content;
+      if (typeof toolContent === "string") return toolContent;
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+};
+
 const extractUserText = (content: unknown): string => {
   if (typeof content === "string") return content;
   if (Array.isArray(content)) {
@@ -47,6 +77,43 @@ const extractUserText = (content: unknown): string => {
       .join("\n");
   }
   return "";
+};
+
+const ToolResultMessage = ({
+  conversation,
+}: {
+  conversation: Extract<ExtendedConversation, { type: "user" }>;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const text = extractToolResultText(conversation.message.content);
+
+  return (
+    <Card className="max-w-4xl bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/50 dark:border-amber-800/50">
+      <CardContent className="p-3">
+        <button
+          type="button"
+          onClick={() => setIsExpanded((prev) => !prev)}
+          className="flex w-full items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-300"
+        >
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+          <Wrench className="h-4 w-4" />
+          <span>Tool Result</span>
+          <span className="text-xs text-muted-foreground ml-auto">
+            {formatTimestamp(conversation.timestamp)}
+          </span>
+        </button>
+        {isExpanded && text && (
+          <pre className="mt-3 text-xs font-mono whitespace-pre-wrap overflow-x-auto bg-white/50 dark:bg-black/20 p-2 rounded max-h-96 overflow-y-auto">
+            {text}
+          </pre>
+        )}
+      </CardContent>
+    </Card>
+  );
 };
 
 const UserMessage = ({
@@ -74,7 +141,15 @@ const UserMessage = ({
   );
 };
 
-const ToolUseCard = ({ content }: { content: AssistantContent }) => {
+const ToolUseCard = ({
+  content,
+  resultText,
+  isError,
+}: {
+  content: AssistantContent;
+  resultText?: string;
+  isError?: boolean;
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (content.type !== "tool_use") return null;
@@ -94,11 +169,42 @@ const ToolUseCard = ({ content }: { content: AssistantContent }) => {
           )}
           <Wrench className="h-4 w-4" />
           <span>{content.name}</span>
+          {resultText !== undefined && (
+            <Badge
+              variant="outline"
+              className={`text-xs ml-1 ${isError ? "border-red-300 text-red-600 dark:border-red-700 dark:text-red-400" : ""}`}
+            >
+              {isError ? "error" : "result"}
+            </Badge>
+          )}
         </button>
-        {isExpanded && content.input && (
-          <pre className="mt-3 text-xs font-mono overflow-x-auto bg-white/50 dark:bg-black/20 p-2 rounded">
-            {JSON.stringify(content.input, null, 2)}
-          </pre>
+        {isExpanded && (
+          <div className="mt-3 space-y-2">
+            {content.input && (
+              <div>
+                <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                  Input
+                </span>
+                <pre className="text-xs font-mono overflow-x-auto bg-white/50 dark:bg-black/20 p-2 rounded mt-1">
+                  {JSON.stringify(content.input, null, 2)}
+                </pre>
+              </div>
+            )}
+            {resultText !== undefined && (
+              <div>
+                <span
+                  className={`text-xs font-medium ${isError ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}
+                >
+                  Result
+                </span>
+                <pre
+                  className={`text-xs font-mono whitespace-pre-wrap overflow-x-auto p-2 rounded mt-1 max-h-96 overflow-y-auto ${isError ? "bg-red-50/50 dark:bg-red-950/20" : "bg-white/50 dark:bg-black/20"}`}
+                >
+                  {resultText || "(empty)"}
+                </pre>
+              </div>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>
@@ -138,10 +244,17 @@ const ThinkingCard = ({ content }: { content: AssistantContent }) => {
   );
 };
 
+type ToolResultInfo = {
+  text: string;
+  isError: boolean;
+};
+
 const AssistantMessage = ({
   conversation,
+  toolResults,
 }: {
   conversation: Extract<ExtendedConversation, { type: "assistant" }>;
+  toolResults?: Map<string, ToolResultInfo>;
 }) => {
   const contents = conversation.message.content as AssistantContent[];
   const textContents = contents.filter((c) => c.type === "text");
@@ -178,9 +291,19 @@ const AssistantMessage = ({
 
       {toolUses.length > 0 && (
         <div className="space-y-2">
-          {toolUses.map((content) => (
-            <ToolUseCard key={content.id ?? content.name} content={content} />
-          ))}
+          {toolUses.map((content) => {
+            const result = content.id
+              ? toolResults?.get(content.id)
+              : undefined;
+            return (
+              <ToolUseCard
+                key={content.id ?? content.name}
+                content={content}
+                resultText={result?.text}
+                isError={result?.isError}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -244,6 +367,38 @@ const SystemMessage = ({
   );
 };
 
+const extractToolResultsMap = (
+  content: unknown,
+): Map<string, ToolResultInfo> => {
+  const map = new Map<string, ToolResultInfo>();
+  if (!Array.isArray(content)) return map;
+  for (const item of content) {
+    if (
+      typeof item === "object" &&
+      item !== null &&
+      "type" in item &&
+      item.type === "tool_result" &&
+      "tool_use_id" in item
+    ) {
+      const toolContent = (item as { content?: unknown }).content;
+      const isError = (item as { is_error?: boolean }).is_error ?? false;
+      let text = "";
+      if (typeof toolContent === "string") {
+        text = toolContent;
+      } else if (Array.isArray(toolContent)) {
+        text = toolContent
+          .map((c: { type?: string; text?: string }) =>
+            c.type === "text" && c.text ? c.text : "",
+          )
+          .filter(Boolean)
+          .join("\n");
+      }
+      map.set(item.tool_use_id as string, { text, isError });
+    }
+  }
+  return map;
+};
+
 export const ClaudeCodeConversationList = ({
   conversations,
 }: {
@@ -266,17 +421,51 @@ export const ClaudeCodeConversationList = ({
       c.type === "system",
   );
 
+  // Build a set of tool-result-only user message indices that are consumed by preceding assistant messages
+  const consumedIndices = new Set<number>();
+  const toolResultsForAssistant = new Map<
+    number,
+    Map<string, ToolResultInfo>
+  >();
+
+  for (let i = 0; i < displayableConversations.length; i++) {
+    const conv = displayableConversations[i];
+    if (!conv || conv.type !== "assistant") continue;
+
+    // Check if the next message is a tool-result-only user message
+    const next = displayableConversations[i + 1];
+    if (next?.type === "user" && isToolResultOnly(next.message.content)) {
+      const resultsMap = extractToolResultsMap(next.message.content);
+      if (resultsMap.size > 0) {
+        toolResultsForAssistant.set(i, resultsMap);
+        consumedIndices.add(i + 1);
+      }
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {displayableConversations.map((conversation, index) => {
+        if (consumedIndices.has(index)) return null;
+
         const key =
           "uuid" in conversation ? conversation.uuid : `entry-${index}`;
 
         switch (conversation.type) {
           case "user":
-            return <UserMessage key={key} conversation={conversation} />;
+            return isToolResultOnly(conversation.message.content) ? (
+              <ToolResultMessage key={key} conversation={conversation} />
+            ) : (
+              <UserMessage key={key} conversation={conversation} />
+            );
           case "assistant":
-            return <AssistantMessage key={key} conversation={conversation} />;
+            return (
+              <AssistantMessage
+                key={key}
+                conversation={conversation}
+                toolResults={toolResultsForAssistant.get(index)}
+              />
+            );
           case "summary":
             return <SummaryMessage key={key} conversation={conversation} />;
           case "system":
