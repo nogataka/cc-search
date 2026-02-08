@@ -12,9 +12,9 @@ export default function HomePage() {
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">CC Viewer</h1>
+          <h1 className="text-4xl font-bold mb-4">CC Search</h1>
           <p className="text-muted-foreground text-lg">
-            Unified Log Viewer for Codex and Claude Code
+            Unified Log Search for Codex and Claude Code
           </p>
         </div>
 

@@ -1,13 +1,13 @@
 {
-  "name": "cc-viewer",
+  "name": "cc-search",
   "version": "0.0.6",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nogataka/cc-viewer.git"
+    "url": "https://github.com/nogataka/cc-search.git"
   },
-  "homepage": "https://github.com/nogataka/cc-viewer",
+  "homepage": "https://github.com/nogataka/cc-search",
   "files": [
     "dist",
     "bin"
@@ -17,7 +17,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "cc-viewer": "./dist/index.js"
+    "cc-search": "./dist/index.js"
   },
   "engines": {
     "node": ">=20.12.0"

@@ -7,7 +7,7 @@ if (process.env.PORT === undefined) {
 const DEFAULT_PORT = Number(process.env.PORT ?? "5858");
 const LOCALHOST = `http://localhost:${DEFAULT_PORT}`;
 const AUTO_OPEN_DISABLED = [
-  process.env.CC_VIEWER_NO_AUTO_OPEN,
+  process.env.CC_SEARCH_NO_AUTO_OPEN,
   process.env.NO_AUTO_OPEN,
   process.env.NO_AUTO_BROWSER,
 ]
@@ -52,7 +52,7 @@ const openBrowser = async (url) => {
   const ready = await waitForServer(url).catch(() => false);
   if (!ready) {
     console.warn(
-      `[cc-viewer] Server readiness check failed, skipping auto-open (${url})`,
+      `[cc-search] Server readiness check failed, skipping auto-open (${url})`,
     );
     return;
   }
@@ -60,10 +60,10 @@ const openBrowser = async (url) => {
   try {
     const { default: open } = await import("open");
     await open(url, { wait: false });
-    console.log(`[cc-viewer] Browser opened: ${url}`);
+    console.log(`[cc-search] Browser opened: ${url}`);
   } catch (error) {
     console.warn(
-      `[cc-viewer] Failed to open browser: ${error instanceof Error ? error.message : String(error)}`,
+      `[cc-search] Failed to open browser: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 };

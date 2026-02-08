@@ -1,6 +1,6 @@
-# CC Viewer
+# CC Search
 
-![CC Viewer](docs/assets/screenshot.png)
+![CC Search](docs/assets/screenshot.png)
 
 **Claude Code** と **Codex** の会話ログを閲覧・検索できる統合ログビューアーです。
 
@@ -9,7 +9,7 @@
 ## クイックスタート
 
 ```bash
-npx cc-viewer
+npx cc-search
 ```
 
 これだけで起動します。ブラウザで http://localhost:5858 を開いてください。
@@ -58,8 +58,8 @@ npx cc-viewer
 ### インストール
 
 ```bash
-git clone https://github.com/nogataka/cc-viewer.git
-cd cc-viewer
+git clone https://github.com/nogataka/cc-search.git
+cd cc-search
 pnpm install
 ```
 
@@ -80,7 +80,7 @@ pnpm start
 
 ## 読み取るデータ
 
-CC Viewer は以下のディレクトリからセッションデータを読み取ります（読み取り専用）。
+CC Search は以下のディレクトリからセッションデータを読み取ります（読み取り専用）。
 
 | ソース | パス |
 |---|---|

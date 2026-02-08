@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CC Viewer",
-  description: "Unified Log Viewer for Codex and Claude Code",
+  title: "CC Search",
+  description: "Unified Log Search for Codex and Claude Code",
 };
 
 export default function RootLayout({

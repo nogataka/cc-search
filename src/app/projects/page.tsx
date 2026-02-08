@@ -22,7 +22,7 @@ export default function ProjectsPage() {
         </Link>
         <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
           <HistoryIcon className="w-8 h-8" />
-          CC Viewer
+          CC Search
         </h1>
         <p className="text-muted-foreground">
           Browse your Claude Code and Codex conversation history
