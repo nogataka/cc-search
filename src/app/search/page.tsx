@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FolderIcon,
+  HistoryIcon,
   Loader2,
   Search as SearchIcon,
   User,
@@ -219,7 +220,10 @@ function SearchPageInner() {
             <ArrowLeft className="h-4 w-4" />
             ホームに戻る
           </Link>
-          <h1 className="text-2xl font-bold">会話履歴を検索</h1>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <HistoryIcon className="w-7 h-7" />
+            会話履歴を検索
+          </h1>
           <p className="text-muted-foreground">
             Claude Code・Codexの会話ログをキーワードや条件で横断検索
           </p>

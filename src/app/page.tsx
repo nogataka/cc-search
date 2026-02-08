@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderSearch, Search } from "lucide-react";
+import { FolderSearch, HistoryIcon, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -27,7 +27,10 @@ export default function HomePage() {
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">CC Search</h1>
+          <h1 className="text-4xl font-bold mb-4 flex items-center justify-center gap-3">
+            <HistoryIcon className="w-9 h-9" />
+            CC Search
+          </h1>
           <p className="text-muted-foreground text-lg">
             Codex・Claude Code 統合ログ検索
           </p>
