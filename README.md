@@ -9,7 +9,7 @@
 ## クイックスタート
 
 ```bash
-npx cc-search
+npx @nogataka/cc-search
 ```
 
 これだけで起動します。ブラウザで http://localhost:5858 を開いてください。
