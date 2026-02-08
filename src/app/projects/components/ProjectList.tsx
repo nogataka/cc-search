@@ -1,6 +1,5 @@
 "use client";
 
-import { basename } from "node:path";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowUpDown,
@@ -32,6 +31,8 @@ import {
 import { cn } from "@/lib/utils";
 import { honoClient } from "../../../lib/api/client";
 
+const getBasename = (path: string) => path.split("/").pop() ?? path;
+
 type ProjectItem = {
   id: string;
   name: string;
@@ -59,7 +60,7 @@ export const ClaudeCodeProjectList: FC = () => {
       ).map(
         (p): ProjectItem => ({
           id: p.id,
-          name: basename(p.projectPath),
+          name: getBasename(p.projectPath),
           path: p.projectPath,
           sessionCount: p.meta.sessionCount,
           lastSessionAt: p.meta.lastSessionDate
@@ -100,7 +101,7 @@ export const CodexProjectList: FC = () => {
       ).map(
         (p): ProjectItem => ({
           id: p.id,
-          name: p.meta.workspaceName ?? basename(p.workspacePath),
+          name: p.meta.workspaceName ?? getBasename(p.workspacePath),
           path: p.meta.workspacePath ?? p.workspacePath,
           sessionCount: p.meta.sessionCount,
           lastSessionAt: p.meta.lastSessionAt
