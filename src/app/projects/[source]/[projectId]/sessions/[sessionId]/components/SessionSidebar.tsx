@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  MessageSquareIcon,
-  SettingsIcon,
-  Undo2Icon,
-} from "lucide-react";
+import { MessageSquareIcon, SettingsIcon, Undo2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type FC, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -89,7 +85,7 @@ export const SessionSidebar: FC<{
               "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
               "text-sidebar-foreground/70",
             )}
-            title="Back to Project"
+            title="プロジェクトに戻る"
           >
             <Undo2Icon className="w-4 h-4" />
           </button>

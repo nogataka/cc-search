@@ -78,7 +78,10 @@ const formatCost = (cost: number) => `$${cost.toFixed(4)}`;
 
 function useProjectSessions(source: string, projectId: string) {
   return useQuery({
-    queryKey: [source === "codex" ? "codex-project" : "claude-code-project", projectId],
+    queryKey: [
+      source === "codex" ? "codex-project" : "claude-code-project",
+      projectId,
+    ],
     queryFn: async () => {
       if (source === "codex") {
         const res = await honoClient.api.codex.projects[":projectId"].$get({
@@ -86,7 +89,9 @@ function useProjectSessions(source: string, projectId: string) {
         });
         return res.json();
       }
-      const res = await honoClient.api["claude-code"].projects[":projectId"].$get({
+      const res = await honoClient.api["claude-code"].projects[
+        ":projectId"
+      ].$get({
         param: { projectId },
       });
       return res.json();
@@ -101,7 +106,9 @@ function normalizeSessionsForSidebar(
   if (!data) return { sessions: [], projectPath: "" };
 
   if (source === "codex") {
-    const sessions = ((data as { sessions?: CodexSession[] }).sessions ?? []).map(
+    const sessions = (
+      (data as { sessions?: CodexSession[] }).sessions ?? []
+    ).map(
       (s: CodexSession): SessionItem => ({
         id: s.id,
         title: getCodexSessionTitle(s),
@@ -109,14 +116,20 @@ function normalizeSessionsForSidebar(
         lastModifiedAt: s.meta.lastModifiedAt,
       }),
     );
-    const project = (data as { project?: { workspacePath?: string; meta?: { workspacePath?: string } } }).project;
+    const project = (
+      data as {
+        project?: { workspacePath?: string; meta?: { workspacePath?: string } };
+      }
+    ).project;
     return {
       sessions,
       projectPath: project?.meta?.workspacePath ?? project?.workspacePath ?? "",
     };
   }
 
-  const sessions = ((data as { sessions?: ClaudeCodeSessionListItem[] }).sessions ?? []).map(
+  const sessions = (
+    (data as { sessions?: ClaudeCodeSessionListItem[] }).sessions ?? []
+  ).map(
     (s: ClaudeCodeSessionListItem): SessionItem => ({
       id: s.id,
       title: s.meta.firstUserMessage ?? s.id,
@@ -426,13 +439,20 @@ export default function SessionDetailPage() {
                     {formatCost(claudeCodeMeta.cost)}
                   </Badge>
                   {claudeCodeMeta.modelName && (
-                    <Badge variant="outline" className="h-6 sm:h-8 text-xs sm:text-sm">
-                      {claudeCodeMeta.modelName.split("-").slice(0, 2).join("-")}
+                    <Badge
+                      variant="outline"
+                      className="h-6 sm:h-8 text-xs sm:text-sm"
+                    >
+                      {claudeCodeMeta.modelName
+                        .split("-")
+                        .slice(0, 2)
+                        .join("-")}
                     </Badge>
                   )}
                   <span className="text-xs text-muted-foreground">
                     {claudeCodeMeta.messageCount} msgs | in{" "}
-                    {claudeCodeMeta.tokenUsage.inputTokens.toLocaleString()}, out{" "}
+                    {claudeCodeMeta.tokenUsage.inputTokens.toLocaleString()},
+                    out{" "}
                     {claudeCodeMeta.tokenUsage.outputTokens.toLocaleString()}
                   </span>
                 </>

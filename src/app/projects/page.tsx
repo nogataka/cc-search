@@ -1,10 +1,15 @@
 import { ArrowLeft, HistoryIcon } from "lucide-react";
 import Link from "next/link";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
+import {
   ClaudeCodeProjectList,
   CodexProjectList,
 } from "./components/ProjectList";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -18,20 +23,20 @@ export default function ProjectsPage() {
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Home
+          ホームへ戻る
         </Link>
         <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
           <HistoryIcon className="w-8 h-8" />
-          CC Search
+          プロジェクト一覧
         </h1>
         <p className="text-muted-foreground">
-          Browse your Claude Code and Codex conversation history
+          Claude Code・Codexのプロジェクトを選んで会話履歴を閲覧
         </p>
       </header>
 
       <main>
         <section>
-          <h2 className="text-xl font-semibold mb-4">Your Projects</h2>
+          <h2 className="text-xl font-semibold mb-4">プロジェクト</h2>
 
           <Tabs defaultValue="claude-code" className="w-full">
             <TabsList className="grid w-full max-w-md grid-cols-2">

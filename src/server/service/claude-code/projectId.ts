@@ -1,4 +1,4 @@
-import { open, readFile, readdir } from "node:fs/promises";
+import { open, readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline";
 
@@ -81,9 +81,7 @@ export const readProjectPathFromIndex = async (
       ),
     );
     if (jsonlFile) {
-      const cwd = await readCwdFromJsonl(
-        resolve(claudeProjectDir, jsonlFile),
-      );
+      const cwd = await readCwdFromJsonl(resolve(claudeProjectDir, jsonlFile));
       if (cwd) {
         return cwd;
       }

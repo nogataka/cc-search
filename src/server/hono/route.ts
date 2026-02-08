@@ -164,16 +164,30 @@ export const routes = (app: HonoAppType) => {
             sources: z.array(z.enum(["codex", "claude-code"])),
             limit: z.number().optional().default(50),
             offset: z.number().optional().default(0),
+            projectPath: z.string().optional(),
+            startDate: z.string().optional(),
+            endDate: z.string().optional(),
           }),
         ),
         async (c) => {
-          const { query, sources, limit, offset } = c.req.valid("json");
+          const {
+            query,
+            sources,
+            limit,
+            offset,
+            projectPath,
+            startDate,
+            endDate,
+          } = c.req.valid("json");
 
           const { results, total } = await search({
             query,
             sources,
             limit,
             offset,
+            projectPath,
+            startDate,
+            endDate,
           });
 
           return c.json({
@@ -186,6 +200,45 @@ export const routes = (app: HonoAppType) => {
           });
         },
       )
+
+      // Combined projects list for search page filter
+      .get("/projects/all", async (c) => {
+        const [ccResult, codexResult] = await Promise.all([
+          getClaudeCodeProjects(),
+          getProjects(),
+        ]);
+
+        const pathMap = new Map<string, { path: string; sources: string[] }>();
+
+        for (const p of ccResult.projects) {
+          const existing = pathMap.get(p.projectPath);
+          if (existing) {
+            if (!existing.sources.includes("claude-code")) {
+              existing.sources.push("claude-code");
+            }
+          } else {
+            pathMap.set(p.projectPath, {
+              path: p.projectPath,
+              sources: ["claude-code"],
+            });
+          }
+        }
+
+        for (const p of codexResult.projects) {
+          const wp = p.meta.workspacePath;
+          if (!wp) continue;
+          const existing = pathMap.get(wp);
+          if (existing) {
+            if (!existing.sources.includes("codex")) {
+              existing.sources.push("codex");
+            }
+          } else {
+            pathMap.set(wp, { path: wp, sources: ["codex"] });
+          }
+        }
+
+        return c.json({ projects: Array.from(pathMap.values()) });
+      })
   );
 };
 

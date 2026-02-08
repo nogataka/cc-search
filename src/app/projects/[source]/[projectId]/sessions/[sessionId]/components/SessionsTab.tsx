@@ -19,12 +19,8 @@ export const SessionsTab: FC<{
   projectId: string;
 }> = ({ sessions, currentSessionId, source, projectId }) => {
   const sortedSessions = [...sessions].sort((a, b) => {
-    const aTime = a.lastModifiedAt
-      ? new Date(a.lastModifiedAt).getTime()
-      : 0;
-    const bTime = b.lastModifiedAt
-      ? new Date(b.lastModifiedAt).getTime()
-      : 0;
+    const aTime = a.lastModifiedAt ? new Date(a.lastModifiedAt).getTime() : 0;
+    const bTime = b.lastModifiedAt ? new Date(b.lastModifiedAt).getTime() : 0;
     return bTime - aTime;
   });
 

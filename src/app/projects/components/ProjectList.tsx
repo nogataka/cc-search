@@ -1,5 +1,6 @@
 "use client";
 
+import { basename } from "node:path";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowUpDown,
@@ -10,7 +11,6 @@ import {
   MessageSquareIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { basename } from "path";
 import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";

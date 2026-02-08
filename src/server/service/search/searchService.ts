@@ -7,6 +7,7 @@ import {
 import { readProjectPathFromIndex } from "../claude-code/projectId";
 import type { ExtendedConversation } from "../claude-code/types";
 import { parseCodexSession } from "../codex/parseCodexSession";
+import { readSessionHeader } from "../codex/sessionFiles";
 import { claudeCodeProjectsRootPath, codexSessionsRootPath } from "../paths";
 
 export type SearchResult = {
@@ -26,6 +27,9 @@ type SearchOptions = {
   sources: ("codex" | "claude-code")[];
   limit: number;
   offset: number;
+  projectPath?: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 const extractTextFromClaudeCodeConversation = (
@@ -62,6 +66,7 @@ const extractTextFromClaudeCodeConversation = (
 const searchClaudeCode = async (
   query: string,
   limit: number,
+  projectPath?: string,
 ): Promise<SearchResult[]> => {
   const results: SearchResult[] = [];
   const queryLower = query.toLowerCase();
@@ -77,6 +82,8 @@ const searchClaudeCode = async (
       if (!projectStat?.isDirectory()) continue;
 
       const displayPath = await readProjectPathFromIndex(projectDirPath);
+
+      if (projectPath && displayPath !== projectPath) continue;
 
       const files = await readdir(projectDirPath).catch(() => []);
       const sessionFiles = files.filter((f) =>
@@ -151,6 +158,7 @@ const searchClaudeCode = async (
 const searchCodex = async (
   query: string,
   limit: number,
+  projectPath?: string,
 ): Promise<SearchResult[]> => {
   const results: SearchResult[] = [];
   const queryLower = query.toLowerCase();
@@ -161,21 +169,27 @@ const searchCodex = async (
     for (const projectDir of projectDirs) {
       if (results.length >= limit) break;
 
-      const projectPath = resolve(codexSessionsRootPath, projectDir);
-      const projectStat = await stat(projectPath).catch(() => null);
+      const codexProjectPath = resolve(codexSessionsRootPath, projectDir);
+      const projectStat = await stat(codexProjectPath).catch(() => null);
       if (!projectStat?.isDirectory()) continue;
 
-      const files = await readdir(projectPath).catch(() => []);
+      const files = await readdir(codexProjectPath).catch(() => []);
       const sessionFiles = files.filter((f) => f.endsWith(".jsonl"));
 
       for (const sessionFile of sessionFiles) {
         if (results.length >= limit) break;
 
-        const sessionPath = resolve(projectPath, sessionFile);
+        const sessionFilePath = resolve(codexProjectPath, sessionFile);
         const sessionId = sessionFile.replace(".jsonl", "");
 
         try {
-          const content = await readFile(sessionPath, "utf-8");
+          // Read header to get real workspace path
+          const header = await readSessionHeader(sessionFilePath);
+          const realProjectPath = header?.workspacePath ?? projectDir;
+
+          if (projectPath && realProjectPath !== projectPath) continue;
+
+          const content = await readFile(sessionFilePath, "utf-8");
           const session = parseCodexSession(content);
 
           for (const turn of session.turns) {
@@ -193,8 +207,9 @@ const searchCodex = async (
                 );
                 results.push({
                   source: "codex",
-                  projectId: Buffer.from(projectPath).toString("base64url"),
-                  projectPath: projectDir,
+                  projectId:
+                    Buffer.from(codexProjectPath).toString("base64url"),
+                  projectPath: realProjectPath,
                   sessionId,
                   matchedText: turn.userMessage.text.slice(
                     matchIndex,
@@ -228,8 +243,9 @@ const searchCodex = async (
                 );
                 results.push({
                   source: "codex",
-                  projectId: Buffer.from(projectPath).toString("base64url"),
-                  projectPath: projectDir,
+                  projectId:
+                    Buffer.from(codexProjectPath).toString("base64url"),
+                  projectPath: realProjectPath,
                   sessionId,
                   matchedText: msg.text.slice(
                     matchIndex,
@@ -268,15 +284,35 @@ export const search = async (
   const searchPromises: Promise<SearchResult[]>[] = [];
 
   if (sources.includes("claude-code")) {
-    searchPromises.push(searchClaudeCode(query, limit + offset));
+    searchPromises.push(
+      searchClaudeCode(query, limit + offset, options.projectPath),
+    );
   }
 
   if (sources.includes("codex")) {
-    searchPromises.push(searchCodex(query, limit + offset));
+    searchPromises.push(
+      searchCodex(query, limit + offset, options.projectPath),
+    );
   }
 
   const resultsArrays = await Promise.all(searchPromises);
   allResults = resultsArrays.flat();
+
+  // Filter by date range
+  if (options.startDate || options.endDate) {
+    const start = options.startDate ? new Date(options.startDate) : null;
+    const end = options.endDate ? new Date(options.endDate) : null;
+    if (end) {
+      end.setHours(23, 59, 59, 999);
+    }
+    allResults = allResults.filter((r) => {
+      if (!r.timestamp) return false;
+      const ts = new Date(r.timestamp);
+      if (start && ts < start) return false;
+      if (end && ts > end) return false;
+      return true;
+    });
+  }
 
   // Sort by timestamp (newest first)
   allResults.sort((a, b) => {
