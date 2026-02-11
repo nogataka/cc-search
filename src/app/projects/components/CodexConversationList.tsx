@@ -37,7 +37,7 @@ const UserMessage = ({
   timestamp: string | null;
 }) => {
   return (
-    <Card className="max-w-4xl bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-800/50">
+    <Card className="max-w-4xl py-0 bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-800/50">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-2 text-sm font-medium text-blue-700 dark:text-blue-300">
           <User className="h-4 w-4" />
@@ -165,7 +165,7 @@ const ToolCallCard = ({
   );
 
   return (
-    <Card className={wrapperClassName}>
+    <Card className={cn("py-0", wrapperClassName)}>
       <CardContent className="p-3">
         <button
           type="button"
@@ -245,7 +245,7 @@ const ToolCallGroup = ({ pairs }: { pairs: ToolPair[] }) => {
   const remainingCount = toolNames.length > 3 ? toolNames.length - 3 : 0;
 
   return (
-    <Card className="max-w-4xl bg-amber-100/40 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/60">
+    <Card className="max-w-4xl py-0 bg-amber-100/40 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/60">
       <CardContent className="p-3 space-y-2">
         <button
           type="button"

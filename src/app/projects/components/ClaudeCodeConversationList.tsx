@@ -88,7 +88,7 @@ const ToolResultMessage = ({
   const text = extractToolResultText(conversation.message.content);
 
   return (
-    <Card className="max-w-4xl bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/50 dark:border-amber-800/50">
+    <Card className="max-w-4xl py-0 bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/50 dark:border-amber-800/50">
       <CardContent className="p-3">
         <button
           type="button"
@@ -124,7 +124,7 @@ const UserMessage = ({
   const text = extractUserText(conversation.message.content);
 
   return (
-    <Card className="max-w-4xl bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-800/50">
+    <Card className="max-w-4xl py-0 bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-800/50">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-2 text-sm font-medium text-blue-700 dark:text-blue-300">
           <User className="h-4 w-4" />
@@ -155,7 +155,7 @@ const ToolUseCard = ({
   if (content.type !== "tool_use") return null;
 
   return (
-    <Card className="bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/50 dark:border-amber-800/50">
+    <Card className="py-0 bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/50 dark:border-amber-800/50">
       <CardContent className="p-3">
         <button
           type="button"
@@ -217,7 +217,7 @@ const ThinkingCard = ({ content }: { content: AssistantContent }) => {
   if (content.type !== "thinking") return null;
 
   return (
-    <Card className="bg-purple-50/50 dark:bg-purple-950/10 border-purple-200/50 dark:border-purple-800/50">
+    <Card className="py-0 bg-purple-50/50 dark:bg-purple-950/10 border-purple-200/50 dark:border-purple-800/50">
       <CardContent className="p-3">
         <button
           type="button"
@@ -328,7 +328,7 @@ const SummaryMessage = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <Card className="max-w-4xl bg-gray-50/50 dark:bg-gray-900/20 border-gray-200/50 dark:border-gray-800/50">
+    <Card className="max-w-4xl py-0 bg-gray-50/50 dark:bg-gray-900/20 border-gray-200/50 dark:border-gray-800/50">
       <CardContent className="p-3">
         <button
           type="button"
