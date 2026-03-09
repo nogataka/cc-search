@@ -72,22 +72,28 @@ export const readProjectPathFromIndex = async (
     // sessions-index.json doesn't exist or can't be parsed
   }
 
-  // 2. Try reading cwd from the first JSONL session file
+  // 2. Try reading cwd from JSONL session files (try multiple until one has cwd)
   try {
     const files = await readdir(claudeProjectDir);
-    const jsonlFile = files.find((f) =>
+    const jsonlFiles = files.filter((f) =>
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jsonl$/i.test(
         f,
       ),
     );
-    if (jsonlFile) {
-      const cwd = await readCwdFromJsonl(resolve(claudeProjectDir, jsonlFile));
-      if (cwd) {
-        return cwd;
+    for (const jsonlFile of jsonlFiles) {
+      try {
+        const cwd = await readCwdFromJsonl(
+          resolve(claudeProjectDir, jsonlFile),
+        );
+        if (cwd) {
+          return cwd;
+        }
+      } catch {
+        // skip this file, try next
       }
     }
   } catch {
-    // Failed to read JSONL files
+    // Failed to read directory
   }
 
   // 3. Last resort: directory name conversion
